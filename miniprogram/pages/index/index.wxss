@@ -40,7 +40,7 @@ page {
 /* 通用区块 - 减少间距 */
 .image-section,
 .settings-section,
-.tips-section {
+.preview-section {
   margin: 20rpx 24rpx;
   background-color: #fff;
   border-radius: 24rpx;
@@ -190,6 +190,97 @@ page {
 
 .radio-item radio {
   margin-right: 8rpx;
+}
+
+/* 字幕高度信息 */
+.subtitle-height-info {
+  margin-top: 16rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #667eea;
+  font-weight: bold;
+}
+
+/* 预览参考图区域 */
+.preview-container {
+  position: relative;
+  width: 100%;
+  margin-top: 12rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.preview-ref-img {
+  width: 100%;
+  display: block;
+}
+
+.preview-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3rpx;
+  background: #667eea;
+  z-index: 2;
+}
+
+.preview-line-top::before,
+.preview-line-bottom::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3rpx;
+  background: #667eea;
+  animation: dash 1s linear infinite;
+}
+
+.preview-line-top::after {
+  content: '上边界';
+  position: absolute;
+  left: 12rpx;
+  top: -36rpx;
+  background: #667eea;
+  color: #fff;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  white-space: nowrap;
+}
+
+.preview-line-bottom::after {
+  content: '下边界';
+  position: absolute;
+  left: 12rpx;
+  bottom: -36rpx;
+  background: #667eea;
+  color: #fff;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  white-space: nowrap;
+}
+
+.preview-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.preview-mask-top {
+  top: 0;
+}
+
+.preview-mask-bottom {
+  bottom: 0;
+}
+
+@keyframes dash {
+  to {
+    background-position: 100% 0;
+  }
 }
 
 /* 底部操作栏 - 更美观 */

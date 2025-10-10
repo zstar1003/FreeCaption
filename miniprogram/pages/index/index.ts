@@ -10,15 +10,13 @@ interface ImageInfo {
 Component({
   data: {
     images: [] as string[], // 已选择的图片路径数组
-    subtitleHeight: 150, // 字幕高度（像素）
-    cropPosition: 'bottom', // 裁剪位置：top / bottom
-    cropPositions: [
-      { label: '底部', value: 'bottom' },
-      { label: '顶部', value: 'top' }
-    ],
+    subtitleTop: 0, // 字幕上边界（像素）
+    subtitleBottom: 150, // 字幕下边界（像素）
     processing: false, // 是否正在处理
     canvasWidth: 750, // Canvas 宽度
-    canvasHeight: 3000 // Canvas 高度
+    canvasHeight: 3000, // Canvas 高度
+    previewImage: '', // 预览参考图（第二张图片）
+    previewHeight: 0 // 预览图高度
   },
 
   methods: {
@@ -33,8 +31,36 @@ Component({
         sourceType: ['album', 'camera'],
         success: (res) => {
           const tempFilePaths = res.tempFilePaths
+          const newImages = [...this.data.images, ...tempFilePaths]
+
           this.setData({
-            images: [...this.data.images, ...tempFilePaths]
+            images: newImages
+          })
+
+          // 如果有第二张图片，设置为预览参考图
+          if (newImages.length >= 2 && !this.data.previewImage) {
+            this.setPreviewImage(newImages[1])
+          }
+        }
+      })
+    },
+
+    // 设置预览参考图
+    setPreviewImage(imagePath: string) {
+      wx.getImageInfo({
+        src: imagePath,
+        success: (res) => {
+          // 计算符合底部字幕的默认值
+          // 一般字幕占图片高度的 15-20%，位于底部
+          const defaultSubtitleHeight = Math.floor(res.height * 0.18) // 字幕高度约为图片的18%
+          const defaultTop = res.height - defaultSubtitleHeight
+          const defaultBottom = res.height
+
+          this.setData({
+            previewImage: imagePath,
+            previewHeight: res.height,
+            subtitleTop: defaultTop,
+            subtitleBottom: defaultBottom
           })
         }
       })
@@ -61,17 +87,96 @@ Component({
       })
     },
 
-    // 字幕高度改变
-    onSubtitleHeightChange(e: any) {
-      this.setData({
-        subtitleHeight: e.detail.value
+    // 字幕上边界改变
+    onSubtitleTopChange(e: any) {
+      const top = e.detail.value
+      // 确保上边界不超过下边界
+      if (top < this.data.subtitleBottom) {
+        this.setData({
+          subtitleTop: top
+        })
+      }
+    },
+
+    // 字幕下边界改变
+    onSubtitleBottomChange(e: any) {
+      const bottom = e.detail.value
+      // 确保下边界不低于上边界
+      if (bottom > this.data.subtitleTop) {
+        this.setData({
+          subtitleBottom: bottom
+        })
+      }
+    },
+
+    // 滑块拖动时实时更新（更灵敏）
+    onSubtitleTopChanging(e: any) {
+      const top = e.detail.value
+      if (top < this.data.subtitleBottom) {
+        this.setData({
+          subtitleTop: top
+        })
+      }
+    },
+
+    onSubtitleBottomChanging(e: any) {
+      const bottom = e.detail.value
+      if (bottom > this.data.subtitleTop) {
+        this.setData({
+          subtitleBottom: bottom
+        })
+      }
+    },
+
+    // 点击上边界数字，弹窗输入
+    onClickSubtitleTop() {
+      const that = this
+      wx.showModal({
+        title: '设置上边界',
+        editable: true,
+        placeholderText: `当前值：${this.data.subtitleTop}px`,
+        content: String(this.data.subtitleTop),
+        success(res) {
+          if (res.confirm && res.content) {
+            const value = parseInt(res.content)
+            if (!isNaN(value) && value >= 0 && value < that.data.subtitleBottom && value <= that.data.previewHeight) {
+              that.setData({
+                subtitleTop: value
+              })
+            } else {
+              wx.showToast({
+                title: '输入值无效',
+                icon: 'none'
+              })
+            }
+          }
+        }
       })
     },
 
-    // 裁剪位置改变
-    onCropPositionChange(e: any) {
-      this.setData({
-        cropPosition: e.detail.value
+    // 点击下边界数字，弹窗输入
+    onClickSubtitleBottom() {
+      const that = this
+      wx.showModal({
+        title: '设置下边界',
+        editable: true,
+        placeholderText: `当前值：${this.data.subtitleBottom}px`,
+        content: String(this.data.subtitleBottom),
+        success(res) {
+          if (res.confirm && res.content) {
+            const value = parseInt(res.content)
+            if (!isNaN(value) && value > that.data.subtitleTop && value <= that.data.previewHeight) {
+              that.setData({
+                subtitleBottom: value
+              })
+            } else {
+              wx.showToast({
+                title: '输入值无效',
+                icon: 'none'
+              })
+            }
+          }
+        }
       })
     },
 
@@ -145,18 +250,22 @@ Component({
     createLongImage(imageInfos: ImageInfo[]): Promise<string> {
       return new Promise((resolve, reject) => {
         const firstImage = imageInfos[0]
-        const subtitleHeightPx = this.data.subtitleHeight
-        const cropPosition = this.data.cropPosition
+        const subtitleTop = this.data.subtitleTop
+        const subtitleBottom = this.data.subtitleBottom
+        const subtitleHeight = subtitleBottom - subtitleTop
 
         // 计算总高度
         let totalHeight = firstImage.height
         for (let i = 1; i < imageInfos.length; i++) {
-          totalHeight += subtitleHeightPx
+          totalHeight += subtitleHeight
         }
 
         console.log('开始绘制长图', {
           width: firstImage.width,
           height: totalHeight,
+          subtitleTop,
+          subtitleBottom,
+          subtitleHeight,
           imageCount: imageInfos.length
         })
 
@@ -177,17 +286,15 @@ Component({
           // 绘制后续图片的字幕部分
           for (let i = 1; i < imageInfos.length; i++) {
             const imageInfo = imageInfos[i]
-            const sy = cropPosition === 'bottom'
-              ? imageInfo.height - subtitleHeightPx
-              : 0
 
+            // 裁剪字幕区域：从 subtitleTop 到 subtitleBottom
             ctx.drawImage(
               imageInfo.path,
-              0, sy, imageInfo.width, subtitleHeightPx,  // 源图裁剪
-              0, currentY, imageInfo.width, subtitleHeightPx  // 目标位置
+              0, subtitleTop, imageInfo.width, subtitleHeight,  // 源图裁剪
+              0, currentY, imageInfo.width, subtitleHeight  // 目标位置
             )
 
-            currentY += subtitleHeightPx
+            currentY += subtitleHeight
           }
 
           // 绘制完成，导出图片

@@ -35,19 +35,20 @@
     <!-- 参数设置区 -->
     <view class="settings-section">
       <view class="section-title">
-        <text>参数设置</text>
+        <text>字幕边界设置</text>
       </view>
 
       <view class="setting-item">
         <view class="setting-label">
-          <text>字幕高度</text>
-          <text class="setting-value">{{subtitleHeight}}px</text>
+          <text>上边界</text>
+          <text class="setting-value" bindtap="onClickSubtitleTop">{{subtitleTop}}px</text>
         </view>
         <slider
-          min="50"
-          max="500"
-          value="{{subtitleHeight}}"
-          bindchange="onSubtitleHeightChange"
+          min="0"
+          max="{{previewHeight || 500}}"
+          value="{{subtitleTop}}"
+          bindchange="onSubtitleTopChange"
+          bindchanging="onSubtitleTopChanging"
           activeColor="#667eea"
           backgroundColor="#e0e0e0"
           block-size="24"
@@ -56,18 +57,39 @@
 
       <view class="setting-item">
         <view class="setting-label">
-          <text>裁剪位置</text>
+          <text>下边界</text>
+          <text class="setting-value" bindtap="onClickSubtitleBottom">{{subtitleBottom}}px</text>
         </view>
-        <radio-group class="radio-group" bindchange="onCropPositionChange">
-          <label class="radio-item" wx:for="{{cropPositions}}" wx:key="value">
-            <radio
-              value="{{item.value}}"
-              checked="{{cropPosition === item.value}}"
-              color="#667eea"
-            />
-            <text>{{item.label}}</text>
-          </label>
-        </radio-group>
+        <slider
+          min="0"
+          max="{{previewHeight || 500}}"
+          value="{{subtitleBottom}}"
+          bindchange="onSubtitleBottomChange"
+          bindchanging="onSubtitleBottomChanging"
+          activeColor="#667eea"
+          backgroundColor="#e0e0e0"
+          block-size="24"
+        />
+      </view>
+
+      <view class="subtitle-height-info">
+        <text>字幕高度：{{subtitleBottom - subtitleTop}}px</text>
+      </view>
+    </view>
+
+    <!-- 预览参考图区域 -->
+    <view class="preview-section" wx:if="{{previewImage}}">
+      <view class="section-title">
+        <text>预览参考</text>
+        <text class="tip">第二张图片</text>
+      </view>
+
+      <view class="preview-container">
+        <image src="{{previewImage}}" mode="widthFix" class="preview-ref-img"></image>
+        <view class="preview-line preview-line-top" style="top: {{subtitleTop / previewHeight * 100}}%"></view>
+        <view class="preview-line preview-line-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-top" style="height: {{subtitleTop / previewHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%; height: {{(previewHeight - subtitleBottom) / previewHeight * 100}}%"></view>
       </view>
     </view>
   </scroll-view>
