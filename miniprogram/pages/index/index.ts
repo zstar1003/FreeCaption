@@ -12,11 +12,14 @@ Component({
     images: [] as string[], // 已选择的图片路径数组
     subtitleTop: 0, // 字幕上边界（像素）
     subtitleBottom: 150, // 字幕下边界（像素）
+    coverBottom: 0, // 封面底部边界（像素，0表示不裁切）
     processing: false, // 是否正在处理
     canvasWidth: 750, // Canvas 宽度
     canvasHeight: 3000, // Canvas 高度
     previewImage: '', // 预览参考图（第二张图片）
-    previewHeight: 0 // 预览图高度
+    previewHeight: 0, // 预览图高度
+    coverImage: '', // 封面预览图（第一张图片）
+    coverHeight: 0 // 封面图高度
   },
 
   methods: {
@@ -37,10 +40,30 @@ Component({
             images: newImages
           })
 
+          // 如果有第一张图片，设置为封面预览图
+          if (newImages.length >= 1 && !this.data.coverImage) {
+            this.setCoverImage(newImages[0])
+          }
+
           // 如果有第二张图片，设置为预览参考图
           if (newImages.length >= 2 && !this.data.previewImage) {
             this.setPreviewImage(newImages[1])
           }
+        }
+      })
+    },
+
+    // 设置封面预览图
+    setCoverImage(imagePath: string) {
+      wx.getImageInfo({
+        src: imagePath,
+        success: (res) => {
+          // 默认封面底部边界为图片底部（不裁切）
+          this.setData({
+            coverImage: imagePath,
+            coverHeight: res.height,
+            coverBottom: res.height
+          })
         }
       })
     },
@@ -126,6 +149,46 @@ Component({
           subtitleBottom: bottom
         })
       }
+    },
+
+    // 封面底部边界改变
+    onCoverBottomChange(e: any) {
+      this.setData({
+        coverBottom: e.detail.value
+      })
+    },
+
+    // 封面底部边界拖动时实时更新
+    onCoverBottomChanging(e: any) {
+      this.setData({
+        coverBottom: e.detail.value
+      })
+    },
+
+    // 点击封面底部边界数字，弹窗输入
+    onClickCoverBottom() {
+      const that = this
+      wx.showModal({
+        title: '设置封面底部边界',
+        editable: true,
+        placeholderText: `当前值：${this.data.coverBottom}px`,
+        content: String(this.data.coverBottom),
+        success(res) {
+          if (res.confirm && res.content) {
+            const value = parseInt(res.content)
+            if (!isNaN(value) && value > 0 && value <= that.data.coverHeight) {
+              that.setData({
+                coverBottom: value
+              })
+            } else {
+              wx.showToast({
+                title: '输入值无效',
+                icon: 'none'
+              })
+            }
+          }
+        }
+      })
     },
 
     // 点击上边界数字，弹窗输入
@@ -253,9 +316,13 @@ Component({
         const subtitleTop = this.data.subtitleTop
         const subtitleBottom = this.data.subtitleBottom
         const subtitleHeight = subtitleBottom - subtitleTop
+        const coverBottom = this.data.coverBottom
+
+        // 计算封面实际高度（如果设置了裁切）
+        const coverHeight = coverBottom > 0 ? coverBottom : firstImage.height
 
         // 计算总高度
-        let totalHeight = firstImage.height
+        let totalHeight = coverHeight
         for (let i = 1; i < imageInfos.length; i++) {
           totalHeight += subtitleHeight
         }
@@ -263,6 +330,8 @@ Component({
         console.log('开始绘制长图', {
           width: firstImage.width,
           height: totalHeight,
+          coverHeight,
+          coverBottom,
           subtitleTop,
           subtitleBottom,
           subtitleHeight,
@@ -279,9 +348,20 @@ Component({
 
           let currentY = 0
 
-          // 绘制第一张完整图片
-          ctx.drawImage(firstImage.path, 0, 0, firstImage.width, firstImage.height)
-          currentY += firstImage.height
+          // 绘制第一张图片（可能裁切底部）
+          if (coverBottom > 0 && coverBottom < firstImage.height) {
+            // 裁切封面底部
+            ctx.drawImage(
+              firstImage.path,
+              0, 0, firstImage.width, coverBottom,  // 源图裁剪：从顶部到coverBottom
+              0, 0, firstImage.width, coverBottom  // 目标位置
+            )
+            currentY += coverBottom
+          } else {
+            // 不裁切，绘制完整封面
+            ctx.drawImage(firstImage.path, 0, 0, firstImage.width, firstImage.height)
+            currentY += firstImage.height
+          }
 
           // 绘制后续图片的字幕部分
           for (let i = 1; i < imageInfos.length; i++) {

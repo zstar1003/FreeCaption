@@ -35,6 +35,48 @@
     <!-- 参数设置区 -->
     <view class="settings-section">
       <view class="section-title">
+        <text>封面裁切设置</text>
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-label">
+          <text>封面底部边界</text>
+          <text class="setting-value" bindtap="onClickCoverBottom">{{coverBottom}}px</text>
+        </view>
+        <slider
+          min="0"
+          max="{{coverHeight || 500}}"
+          value="{{coverBottom}}"
+          bindchange="onCoverBottomChange"
+          bindchanging="onCoverBottomChanging"
+          activeColor="#667eea"
+          backgroundColor="#e0e0e0"
+          block-size="24"
+        />
+      </view>
+
+      <view class="subtitle-height-info">
+        <text>裁切高度：{{coverBottom > 0 ? coverBottom : coverHeight}}px{{coverBottom < coverHeight ? '（已裁切 ' + (coverHeight - coverBottom) + 'px）' : '（不裁切）'}}</text>
+      </view>
+    </view>
+
+    <!-- 封面预览区域 -->
+    <view class="preview-section" wx:if="{{coverImage}}">
+      <view class="section-title">
+        <text>封面预览</text>
+        <text class="tip">第一张图片</text>
+      </view>
+
+      <view class="preview-container">
+        <image src="{{coverImage}}" mode="widthFix" class="preview-ref-img"></image>
+        <view class="preview-line preview-line-bottom" style="top: {{coverBottom / coverHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-bottom" style="top: {{coverBottom / coverHeight * 100}}%; height: {{(coverHeight - coverBottom) / coverHeight * 100}}%"></view>
+      </view>
+    </view>
+
+    <!-- 字幕参数设置区 -->
+    <view class="settings-section">
+      <view class="section-title">
         <text>字幕边界设置</text>
       </view>
 
@@ -80,7 +122,7 @@
     <!-- 预览参考图区域 -->
     <view class="preview-section" wx:if="{{previewImage}}">
       <view class="section-title">
-        <text>预览参考</text>
+        <text>字幕预览</text>
         <text class="tip">第二张图片</text>
       </view>
 
