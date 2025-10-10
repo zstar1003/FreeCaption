@@ -16,7 +16,9 @@ Component({
       { label: '底部', value: 'bottom' },
       { label: '顶部', value: 'top' }
     ],
-    processing: false // 是否正在处理
+    processing: false, // 是否正在处理
+    canvasWidth: 750, // Canvas 宽度
+    canvasHeight: 3000 // Canvas 高度
   },
 
   methods: {
@@ -158,54 +160,60 @@ Component({
           imageCount: imageInfos.length
         })
 
-        // 使用旧版 Canvas API（更稳定）
-        const ctx = wx.createCanvasContext('myCanvas', this)
+        // 设置 Canvas 尺寸
+        this.setData({
+          canvasWidth: firstImage.width,
+          canvasHeight: totalHeight
+        }, () => {
+          // Canvas 尺寸设置完成后开始绘制
+          const ctx = wx.createCanvasContext('myCanvas', this)
 
-        let currentY = 0
+          let currentY = 0
 
-        // 绘制第一张完整图片
-        ctx.drawImage(firstImage.path, 0, 0, firstImage.width, firstImage.height)
-        currentY += firstImage.height
+          // 绘制第一张完整图片
+          ctx.drawImage(firstImage.path, 0, 0, firstImage.width, firstImage.height)
+          currentY += firstImage.height
 
-        // 绘制后续图片的字幕部分
-        for (let i = 1; i < imageInfos.length; i++) {
-          const imageInfo = imageInfos[i]
-          const sy = cropPosition === 'bottom'
-            ? imageInfo.height - subtitleHeightPx
-            : 0
+          // 绘制后续图片的字幕部分
+          for (let i = 1; i < imageInfos.length; i++) {
+            const imageInfo = imageInfos[i]
+            const sy = cropPosition === 'bottom'
+              ? imageInfo.height - subtitleHeightPx
+              : 0
 
-          ctx.drawImage(
-            imageInfo.path,
-            0, sy, imageInfo.width, subtitleHeightPx,  // 源图裁剪
-            0, currentY, imageInfo.width, subtitleHeightPx  // 目标位置
-          )
+            ctx.drawImage(
+              imageInfo.path,
+              0, sy, imageInfo.width, subtitleHeightPx,  // 源图裁剪
+              0, currentY, imageInfo.width, subtitleHeightPx  // 目标位置
+            )
 
-          currentY += subtitleHeightPx
-        }
+            currentY += subtitleHeightPx
+          }
 
-        // 绘制完成，导出图片
-        ctx.draw(false, () => {
-          setTimeout(() => {
-            wx.canvasToTempFilePath({
-              x: 0,
-              y: 0,
-              width: firstImage.width,
-              height: totalHeight,
-              destWidth: firstImage.width,
-              destHeight: totalHeight,
-              canvasId: 'myCanvas',
-              fileType: 'jpg',
-              quality: 1,
-              success: (res) => {
-                console.log('导出成功', res.tempFilePath)
-                resolve(res.tempFilePath)
-              },
-              fail: (err) => {
-                console.error('导出失败', err)
-                reject(err)
-              }
-            }, this)
-          }, 1000)  // 增加延迟确保绘制完成
+          // 绘制完成，导出图片
+          ctx.draw(false, () => {
+            setTimeout(() => {
+              wx.canvasToTempFilePath({
+                x: 0,
+                y: 0,
+                width: firstImage.width,
+                height: totalHeight,
+                destWidth: firstImage.width,
+                destHeight: totalHeight,
+                canvasId: 'myCanvas',
+                fileType: 'jpg',
+                quality: 1,
+                success: (res) => {
+                  console.log('导出成功', res.tempFilePath)
+                  resolve(res.tempFilePath)
+                },
+                fail: (err) => {
+                  console.error('导出失败', err)
+                  reject(err)
+                }
+              }, this)
+            }, 1000)
+          })
         })
       })
     }
