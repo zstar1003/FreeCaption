@@ -58,31 +58,16 @@
         <view class="setting-label">
           <text>裁剪位置</text>
         </view>
-        <view class="radio-group">
+        <radio-group class="radio-group" bindchange="onCropPositionChange">
           <label class="radio-item" wx:for="{{cropPositions}}" wx:key="value">
             <radio
               value="{{item.value}}"
               checked="{{cropPosition === item.value}}"
-              bindtap="onCropPositionChange"
-              data-value="{{item.value}}"
               color="#667eea"
             />
             <text>{{item.label}}</text>
           </label>
-        </view>
-      </view>
-    </view>
-
-    <!-- 说明区 -->
-    <view class="tips-section">
-      <view class="section-title">
-        <text>使用说明</text>
-      </view>
-      <view class="tips-content">
-        <text class="tip-item">1. 第一张图片将作为完整封面</text>
-        <text class="tip-item">2. 后续图片只截取字幕部分拼接</text>
-        <text class="tip-item">3. 调整字幕高度以适应不同场景</text>
-        <text class="tip-item">4. 支持长按保存生成的长图</text>
+        </radio-group>
       </view>
     </view>
   </scroll-view>

@@ -69,7 +69,7 @@ Component({
     // 裁剪位置改变
     onCropPositionChange(e: any) {
       this.setData({
-        cropPosition: e.currentTarget.dataset.value
+        cropPosition: e.detail.value
       })
     },
 
