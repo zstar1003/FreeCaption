@@ -1,0 +1,110 @@
+<!-- index.wxml -->
+<view class="container">
+  <scroll-view scroll-y="true" class="main-content">
+    <!-- 标题区 -->
+    <view class="header">
+      <text class="title">拼字幕工具</text>
+      <text class="subtitle">上传图片，自动拼接字幕区域</text>
+    </view>
+
+    <!-- 图片列表区 -->
+    <view class="image-section">
+      <view class="section-title">
+        <text>已选图片 ({{images.length}}/9)</text>
+        <text class="tip">第一张为封面</text>
+      </view>
+
+      <view class="image-list">
+        <block wx:for="{{images}}" wx:key="index">
+          <view class="image-item">
+            <image src="{{item}}" mode="aspectFill" class="preview-img"></image>
+            <view class="image-badge">{{index === 0 ? '封面' : index}}</view>
+            <view class="delete-btn" bindtap="deleteImage" data-index="{{index}}">
+              <text>✕</text>
+            </view>
+          </view>
+        </block>
+
+        <view class="add-image-btn" bindtap="chooseImages" wx:if="{{images.length < 9}}">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加图片</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 参数设置区 -->
+    <view class="settings-section">
+      <view class="section-title">
+        <text>参数设置</text>
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-label">
+          <text>字幕高度</text>
+          <text class="setting-value">{{subtitleHeight}}px</text>
+        </view>
+        <slider
+          min="50"
+          max="500"
+          value="{{subtitleHeight}}"
+          bindchange="onSubtitleHeightChange"
+          activeColor="#667eea"
+          backgroundColor="#e0e0e0"
+          block-size="24"
+        />
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-label">
+          <text>裁剪位置</text>
+        </view>
+        <view class="radio-group">
+          <label class="radio-item" wx:for="{{cropPositions}}" wx:key="value">
+            <radio
+              value="{{item.value}}"
+              checked="{{cropPosition === item.value}}"
+              bindtap="onCropPositionChange"
+              data-value="{{item.value}}"
+              color="#667eea"
+            />
+            <text>{{item.label}}</text>
+          </label>
+        </view>
+      </view>
+    </view>
+
+    <!-- 说明区 -->
+    <view class="tips-section">
+      <view class="section-title">
+        <text>使用说明</text>
+      </view>
+      <view class="tips-content">
+        <text class="tip-item">1. 第一张图片将作为完整封面</text>
+        <text class="tip-item">2. 后续图片只截取字幕部分拼接</text>
+        <text class="tip-item">3. 调整字幕高度以适应不同场景</text>
+        <text class="tip-item">4. 支持长按保存生成的长图</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <button class="action-btn secondary" bindtap="clearAll" wx:if="{{images.length > 0}}">
+      清空
+    </button>
+    <button
+      class="action-btn primary {{images.length < 2 ? 'disabled' : ''}}"
+      bindtap="generateLongImage"
+      disabled="{{images.length < 2 || processing}}"
+    >
+      {{processing ? '生成中...' : '生成长图'}}
+    </button>
+  </view>
+
+  <!-- 隐藏的 Canvas 用于生成图片 -->
+  <canvas
+    type="2d"
+    id="canvas"
+    style="position: fixed; left: -9999px; top: -9999px; width: 100px; height: 100px;"
+  ></canvas>
+</view>

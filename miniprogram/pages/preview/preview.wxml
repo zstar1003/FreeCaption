@@ -1,0 +1,18 @@
+<!-- preview.wxml -->
+<view class="container">
+  <view class="preview-area">
+    <scroll-view scroll-y="true" class="scroll-view">
+      <image
+        src="{{resultImage}}"
+        mode="widthFix"
+        class="result-image"
+        show-menu-by-longpress="true"
+      ></image>
+    </scroll-view>
+  </view>
+
+  <view class="bottom-bar">
+    <button class="action-btn secondary" bindtap="goBack">返回编辑</button>
+    <button class="action-btn primary" bindtap="saveImage">保存到相册</button>
+  </view>
+</view>

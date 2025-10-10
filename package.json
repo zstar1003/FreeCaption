@@ -1,0 +1,23 @@
+{
+  "name": "free-caption",
+  "version": "1.0.0",
+  "description": "微信小程序 - 拼字幕工具",
+  "scripts": {
+    "tsc": "tsc",
+    "build": "tsc"
+  },
+  "keywords": [
+    "miniprogram",
+    "wechat",
+    "subtitle",
+    "image-processing"
+  ],
+  "author": "FreeCaption",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^2.8.3-1"
+  }
+}
+
