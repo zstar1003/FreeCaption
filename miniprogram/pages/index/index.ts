@@ -139,120 +139,28 @@ Component({
       return Promise.all(promises)
     },
 
-    // 创建长图
+    // 创建长图 - 使用旧版稳定的 Canvas API
     createLongImage(imageInfos: ImageInfo[]): Promise<string> {
       return new Promise((resolve, reject) => {
         const firstImage = imageInfos[0]
-        const canvasWidth = firstImage.width
         const subtitleHeightPx = this.data.subtitleHeight
         const cropPosition = this.data.cropPosition
 
         // 计算总高度
-        let totalHeight = firstImage.height // 第一张完整高度
+        let totalHeight = firstImage.height
         for (let i = 1; i < imageInfos.length; i++) {
           totalHeight += subtitleHeightPx
         }
 
-        // 创建离屏 Canvas
-        const query = wx.createSelectorQuery().in(this)
-        query.select('#canvas')
-          .fields({ node: true, size: true })
-          .exec((res) => {
-            if (!res || !res[0]) {
-              // 如果没有 Canvas 节点，使用旧版 API
-              this.createLongImageLegacy(imageInfos, canvasWidth, totalHeight, subtitleHeightPx, cropPosition)
-                .then(resolve)
-                .catch(reject)
-              return
-            }
+        console.log('开始绘制长图', {
+          width: firstImage.width,
+          height: totalHeight,
+          imageCount: imageInfos.length
+        })
 
-            const canvas = res[0].node
-            const ctx = canvas.getContext('2d')
+        // 使用旧版 Canvas API（更稳定）
+        const ctx = wx.createCanvasContext('myCanvas', this)
 
-            // 设置 Canvas 尺寸
-            canvas.width = canvasWidth
-            canvas.height = totalHeight
-
-            let currentY = 0
-
-            // 绘制第一张完整图片
-            const img0 = canvas.createImage()
-            img0.onload = () => {
-              ctx.drawImage(img0, 0, 0, firstImage.width, firstImage.height)
-              currentY += firstImage.height
-
-              // 递归绘制后续图片的字幕部分
-              this.drawSubtitles(ctx, canvas, imageInfos, 1, currentY, subtitleHeightPx, cropPosition)
-                .then(() => {
-                  // 导出图片
-                  wx.canvasToTempFilePath({
-                    canvas,
-                    success: (res) => {
-                      resolve(res.tempFilePath)
-                    },
-                    fail: reject
-                  })
-                })
-                .catch(reject)
-            }
-            img0.onerror = reject
-            img0.src = firstImage.path
-          })
-      })
-    },
-
-    // 递归绘制字幕部分（新版 Canvas）
-    drawSubtitles(
-      ctx: any,
-      canvas: any,
-      imageInfos: ImageInfo[],
-      index: number,
-      currentY: number,
-      subtitleHeight: number,
-      cropPosition: string
-    ): Promise<void> {
-      if (index >= imageInfos.length) {
-        return Promise.resolve()
-      }
-
-      return new Promise((resolve, reject) => {
-        const imageInfo = imageInfos[index]
-        const img = canvas.createImage()
-
-        img.onload = () => {
-          // 计算裁剪位置
-          const sy = cropPosition === 'bottom'
-            ? imageInfo.height - subtitleHeight
-            : 0
-
-          // 绘制裁剪的字幕部分
-          ctx.drawImage(
-            img,
-            0, sy, imageInfo.width, subtitleHeight, // 源图裁剪区域
-            0, currentY, imageInfo.width, subtitleHeight // 目标绘制区域
-          )
-
-          // 继续绘制下一张
-          this.drawSubtitles(ctx, canvas, imageInfos, index + 1, currentY + subtitleHeight, subtitleHeight, cropPosition)
-            .then(resolve)
-            .catch(reject)
-        }
-        img.onerror = reject
-        img.src = imageInfo.path
-      })
-    },
-
-    // 旧版 Canvas API 实现（兼容）
-    createLongImageLegacy(
-      imageInfos: ImageInfo[],
-      canvasWidth: number,
-      totalHeight: number,
-      subtitleHeight: number,
-      cropPosition: string
-    ): Promise<string> {
-      return new Promise((resolve, reject) => {
-        const ctx = wx.createCanvasContext('canvas', this)
-        const firstImage = imageInfos[0]
         let currentY = 0
 
         // 绘制第一张完整图片
@@ -263,28 +171,41 @@ Component({
         for (let i = 1; i < imageInfos.length; i++) {
           const imageInfo = imageInfos[i]
           const sy = cropPosition === 'bottom'
-            ? imageInfo.height - subtitleHeight
+            ? imageInfo.height - subtitleHeightPx
             : 0
 
           ctx.drawImage(
             imageInfo.path,
-            0, sy, imageInfo.width, subtitleHeight,
-            0, currentY, imageInfo.width, subtitleHeight
+            0, sy, imageInfo.width, subtitleHeightPx,  // 源图裁剪
+            0, currentY, imageInfo.width, subtitleHeightPx  // 目标位置
           )
 
-          currentY += subtitleHeight
+          currentY += subtitleHeightPx
         }
 
+        // 绘制完成，导出图片
         ctx.draw(false, () => {
           setTimeout(() => {
             wx.canvasToTempFilePath({
-              canvasId: 'canvas',
+              x: 0,
+              y: 0,
+              width: firstImage.width,
+              height: totalHeight,
+              destWidth: firstImage.width,
+              destHeight: totalHeight,
+              canvasId: 'myCanvas',
+              fileType: 'jpg',
+              quality: 1,
               success: (res) => {
+                console.log('导出成功', res.tempFilePath)
                 resolve(res.tempFilePath)
               },
-              fail: reject
+              fail: (err) => {
+                console.error('导出失败', err)
+                reject(err)
+              }
             }, this)
-          }, 500)
+          }, 1000)  // 增加延迟确保绘制完成
         })
       })
     }
