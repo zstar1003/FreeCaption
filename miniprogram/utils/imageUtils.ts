@@ -55,57 +55,81 @@ export function calculateTotalHeight(
 /**
  * 保存图片到相册
  */
-export function saveImageToAlbum(filePath: string): Promise<void> {
+ export function saveImageToAlbum(filePath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    // 先检查授权状态
     wx.getSetting({
       success(res) {
-        if (!res.authSetting['scope.writePhotosAlbum']) {
-          // 请求授权
+        const scopeKey = 'scope.writePhotosAlbum';
+        const has = res.authSetting[scopeKey];
+        if (has === true) {
+          // 已授权
+          doSave();
+        } else if (has === undefined) {
+          // 第一次请求授权
           wx.authorize({
-            scope: 'scope.writePhotosAlbum',
+            scope: scopeKey,
             success() {
-              doSave()
+              doSave();
             },
             fail() {
-              wx.showModal({
-                title: '提示',
-                content: '需要您授权保存图片到相册',
-                confirmText: '去授权',
-                success(modalRes) {
-                  if (modalRes.confirm) {
-                    wx.openSetting({
-                      success(settingRes) {
-                        if (settingRes.authSetting['scope.writePhotosAlbum']) {
-                          doSave()
-                        } else {
-                          reject(new Error('用户拒绝授权'))
-                        }
-                      }
-                    })
-                  } else {
-                    reject(new Error('用户取消授权'))
-                  }
-                }
-              })
+              // 用户拒绝授权（第一次拒绝）
+              showModalToOpenSetting();
             }
-          })
+          });
         } else {
-          doSave()
+          // has === false，即之前拒绝过授权
+          showModalToOpenSetting();
         }
       },
-      fail: reject
-    })
+      fail(err) {
+        reject(err);
+      }
+    });
+
+    function showModalToOpenSetting() {
+      wx.showModal({
+        title: '提示',
+        content: '需要您授权保存图片到相册',
+        confirmText: '去授权',
+        cancelText: '取消',
+        success(modalRes) {
+          if (modalRes.confirm) {
+            wx.openSetting({
+              success(settingRes) {
+                if (settingRes.authSetting['scope.writePhotosAlbum']) {
+                  doSave();
+                } else {
+                  reject(new Error('用户拒绝授权'));
+                }
+              },
+              fail(err) {
+                reject(err);
+              }
+            });
+          } else {
+            reject(new Error('用户取消授权'));
+          }
+        },
+        fail(err) {
+          reject(err);
+        }
+      });
+    }
 
     function doSave() {
       wx.saveImageToPhotosAlbum({
         filePath,
-        success: () => resolve(),
-        fail: reject
-      })
+        success() {
+          resolve();
+        },
+        fail(err) {
+          reject(err);
+        }
+      });
     }
-  })
+  });
 }
+
 
 /**
  * 压缩图片

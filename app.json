@@ -1,14 +1,22 @@
 {
-  "pages": [
-    "pages/index/index",
-    "pages/preview/preview"
-  ],
-  "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "拼字幕",
-    "navigationBarTextStyle": "black"
-  },
-  "style": "v2",
-  "sitemapLocation": "sitemap.json"
+    "pages": [
+        "pages/index/index",
+        "pages/preview/preview"
+    ],
+    "window": {
+        "backgroundTextStyle": "light",
+        "navigationBarBackgroundColor": "#fff",
+        "navigationBarTitleText": "拼字幕",
+        "navigationBarTextStyle": "black"
+    },
+    "style": "v2",
+    "sitemapLocation": "sitemap.json",
+    "permission": {
+        "scope.writePhotosAlbum": {
+            "desc": "保存图片到相册以便用户查看和分享"
+        },
+        "scope.album": {
+            "desc": "选择相册中的照片或视频用于拼接字幕"
+        }
+    }
 }
