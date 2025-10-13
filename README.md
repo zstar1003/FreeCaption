@@ -2,6 +2,12 @@
 
 一个微信小程序工具，用于拼接多张图片的字幕区域，生成长图。
 
+扫码访问：
+
+<div align="center">
+  <img src="Assets\mini_program.png"  alt="LOGO">
+</div>
+
 ## 功能特点
 
 - 📸 上传多张图片（最多9张）
