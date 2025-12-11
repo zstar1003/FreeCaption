@@ -32,6 +32,20 @@
       </view>
     </view>
 
+    <!-- 封面预览区域 -->
+    <view class="preview-section" wx:if="{{coverImage}}">
+      <view class="section-title">
+        <text>封面预览</text>
+        <text class="tip">第一张图片</text>
+      </view>
+
+      <view class="preview-container">
+        <image src="{{coverImage}}" mode="widthFix" class="preview-ref-img"></image>
+        <view class="preview-line preview-line-bottom" style="top: {{coverBottom / coverHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-bottom" style="top: {{coverBottom / coverHeight * 100}}%; height: {{(coverHeight - coverBottom) / coverHeight * 100}}%"></view>
+      </view>
+    </view>
+
     <!-- 参数设置区 -->
     <view class="settings-section">
       <view class="section-title">
@@ -60,17 +74,19 @@
       </view>
     </view>
 
-    <!-- 封面预览区域 -->
-    <view class="preview-section" wx:if="{{coverImage}}">
+    <!-- 预览参考图区域 -->
+    <view class="preview-section" wx:if="{{previewImage}}">
       <view class="section-title">
-        <text>封面预览</text>
-        <text class="tip">第一张图片</text>
+        <text>字幕预览</text>
+        <text class="tip">第二张图片</text>
       </view>
 
       <view class="preview-container">
-        <image src="{{coverImage}}" mode="widthFix" class="preview-ref-img"></image>
-        <view class="preview-line preview-line-bottom" style="top: {{coverBottom / coverHeight * 100}}%"></view>
-        <view class="preview-mask preview-mask-bottom" style="top: {{coverBottom / coverHeight * 100}}%; height: {{(coverHeight - coverBottom) / coverHeight * 100}}%"></view>
+        <image src="{{previewImage}}" mode="widthFix" class="preview-ref-img"></image>
+        <view class="preview-line preview-line-top" style="top: {{subtitleTop / previewHeight * 100}}%"></view>
+        <view class="preview-line preview-line-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-top" style="height: {{subtitleTop / previewHeight * 100}}%"></view>
+        <view class="preview-mask preview-mask-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%; height: {{(previewHeight - subtitleBottom) / previewHeight * 100}}%"></view>
       </view>
     </view>
 
@@ -116,22 +132,6 @@
 
       <view class="subtitle-height-info">
         <text>字幕高度：{{subtitleBottom - subtitleTop}}px</text>
-      </view>
-    </view>
-
-    <!-- 预览参考图区域 -->
-    <view class="preview-section" wx:if="{{previewImage}}">
-      <view class="section-title">
-        <text>字幕预览</text>
-        <text class="tip">第二张图片</text>
-      </view>
-
-      <view class="preview-container">
-        <image src="{{previewImage}}" mode="widthFix" class="preview-ref-img"></image>
-        <view class="preview-line preview-line-top" style="top: {{subtitleTop / previewHeight * 100}}%"></view>
-        <view class="preview-line preview-line-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%"></view>
-        <view class="preview-mask preview-mask-top" style="height: {{subtitleTop / previewHeight * 100}}%"></view>
-        <view class="preview-mask preview-mask-bottom" style="top: {{subtitleBottom / previewHeight * 100}}%; height: {{(previewHeight - subtitleBottom) / previewHeight * 100}}%"></view>
       </view>
     </view>
   </scroll-view>
