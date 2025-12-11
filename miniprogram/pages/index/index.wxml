@@ -10,7 +10,7 @@
     <!-- 图片列表区 -->
     <view class="image-section">
       <view class="section-title">
-        <text>已选图片 ({{images.length}}/9)</text>
+        <text>已选图片 ({{images.length}})</text>
         <text class="tip">第一张为封面</text>
       </view>
 
@@ -25,7 +25,7 @@
           </view>
         </block>
 
-        <view class="add-image-btn" bindtap="chooseImages" wx:if="{{images.length < 9}}">
+        <view class="add-image-btn" bindtap="chooseImages">
           <text class="add-icon">+</text>
           <text class="add-text">添加图片</text>
         </view>

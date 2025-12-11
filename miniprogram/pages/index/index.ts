@@ -136,11 +136,8 @@ Component({
 
     // 选择图片
     async chooseImages() {
-      const currentCount = this.data.images.length
-      const maxCount = 9 - currentCount
-
       wx.chooseImage({
-        count: maxCount,
+        count: 9, // 微信单次最多选择9张，但总数不限
         sizeType: ['original', 'compressed'],
         sourceType: ['album', 'camera'],
         success: async (res) => {
